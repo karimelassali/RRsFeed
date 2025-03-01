@@ -1,0 +1,4 @@
+if
+we fixed the env file in produvction server i have to change cors configuration in
+
+config/cors.php

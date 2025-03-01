@@ -1,0 +1,5 @@
+https://www.regione.vda.it/pressevda/default_i.asp
+
+https://appweb.regione.vda.it/dbweb/Comunicati.nsf/ElencoImpegni_ita/$first?OpenDocument
+
+https://appweb.regione.vda.it/dbweb/Comunicati.nsf/ElencoPrincipali_ita/$first?OpenDocument

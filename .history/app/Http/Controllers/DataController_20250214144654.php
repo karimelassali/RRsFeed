@@ -1,0 +1,115 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\RssFeedModel;
+use Illuminate\Support\Facades\Log;
+
+use Illuminate\Support\Facades\Http;
+
+
+class DataController extends Controller
+{
+    /**
+     * Returns a paginated list of feeds.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getFeedsData(Request $request)
+    {
+        try {
+            $perPage = $request->query('pageSize', 10);
+            $page = $request->query('page', 1);
+            $searchQuery = $request->query('search', '');
+            $filters = $request->query('filters', []);
+
+            // Start building the query
+            $query = RssFeedModel::select('id', 'title', 'description', 'source', 'pubDate', 'isPublished');
+
+            // Apply search query (if provided)
+            if (!empty($searchQuery)) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('title', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('source', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
+            // Apply filters (if provided)
+            if (!empty($filters)) {
+                $query->whereIn('source', $filters);
+            }
+
+            // Fetch paginated results
+            $feeds = $query->latest()->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json([
+                'success' => true,
+                'data' => $feeds->items(),
+                'pagination' => [
+                    'current_page' => $feeds->currentPage(),
+                    'per_page' => $feeds->perPage(),
+                    'total' => $feeds->total(),
+                    'last_page' => $feeds->lastPage(),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getSpeceficData(Request $request, $id)
+    {
+        $data = RssFeedModel::find($id);
+        return response()->json($data);
+    }
+
+    public function publishArticle(Request $request, $id)
+    {
+        $data = RssFeedModel::find($id);
+        $data->isPublished = true;
+        $data->save();
+        try {
+            // Pass the API URL directly in the notification function
+            $this->sendNotification(
+                'New update: ' . $data['title'],  // Notification title
+                $data['description'],             // Notification message
+                $data['link'],                    // URL for the notification
+                'https://api.onesignal.com',      // Direct REST API URL for OneSignal
+            );
+        } catch (\Exception $e) {
+            // Handle notification failure
+            Log::error('Notification failed for item ' . $data['title'] . ': ' . $e->getMessage());
+        }
+        return response()->json($data);
+    }
+
+    public function sendNotification($title, $message, $url, $restApiUrl)
+    {
+        $appId = config('services.onesignal.app_id','e8dd6f91-e21d-4a9c-bab4-f8440b7d63b0');
+        $restApiKey = config('services.onesignal.rest_api_key','os_v2_app_5dow7epcdvfjzovu7bcaw7ldwcijmaimzf7unvet2utpbxyy7yfqxkfrlpi4wk4xezcifgjkoo4w4hlq6hqcm5swzffepffe66ztclq');
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Basic ' . $restApiKey,
+        ])->post($restApiUrl . '/notifications', [
+            'app_id' => $appId,
+            'contents' => ['en' => $message],
+            'headings' => ['en' => $title],
+            'url' => $url,
+            'included_segments' => ['All'],  // Send to all users
+        ]);
+
+        if ($response->successful()) {
+            Log::info("Notification sent successfully!");
+        } else {
+            Log::error("Notification failed: " . $response->body());
+        }
+    }
+
+}
