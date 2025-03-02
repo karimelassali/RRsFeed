@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+
 
 
 
@@ -30,12 +33,16 @@ class AuthController extends Controller
         $validatedData = $request->validate([
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'name' => 'required',
+            'role' => 'in:admin,user',
         ]);
 
         $user = User::create([
-            'name' => 'guest',
+            'name' => $validatedData['name'] ?? 'guest',
             'email' => $validatedData['email'],
             'password' => bcrypt($validatedData['password']),
+            'role' => $validatedData['role'] ?? 'user',
+            'api_token' => Str::uuid(),
         ]);
 
         if (!$user) {
