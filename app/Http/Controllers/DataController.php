@@ -86,30 +86,30 @@ class DataController extends Controller
         $data = RssFeedModel::find($id);
         $data->isPublished = true;
         $data->save();
-        // $readyFeed = new ReadyFeed();
-        // $readyFeed->title = $request->get('title');
-        // $readyFeed->description = $request->input('description','tetsing');
-        // $readyFeed->image = $request->input('image','dvs');
-        // $readyFeed->category = $request->input('category');
-        // $readyFeed->showInHomePage = $request->input('showInHomePage',true);
-        // $readyFeed->publishType = $request->input('publishType');
-        // $readyFeed->date = $request->input('date', (new \DateTime())->format('Y-m-d'));
-        // $readyFeed->time = $request->input('time', (new \DateTime())->format('H:i'));
-        // $readyFeed->scheduledTime = $request->input('scheduledTime');
-        // $readyFeed->save();
+        $readyFeed = new ReadyFeed();
+        $readyFeed->title = $request->get('title') ?? '';
+        $readyFeed->description = $request->input('description') ?? '';
+        $readyFeed->image = $request->input('image') ?? '';
+        $readyFeed->category = $request->input('category') ?? '';
+        $readyFeed->showInHomePage = $request->get('showInHomePage') ?? true;
+        $readyFeed->publishType = $request->get('publishType') ?? 'now';
+        $readyFeed->date = $request->input('date') ?? (new \DateTime())->format('Y-m-d');
+        $readyFeed->time = $request->input('time') ?? (new \DateTime())->format('H:i');
+        $readyFeed->scheduledTime = $request->input('scheduledTime') ?? '';
+        $readyFeed->save();
 
-        // try {
-        //     // Pass the API URL directly in the notification function
-        //     $this->sendNotification(
-        //         'New update: ' . $readyFeed['title'],  // Notification title
-        //         $readyFeed['description'],             // Notification message
-        //         $readyFeed['link'],                    // URL for the notification
-        //         'https://api.onesignal.com',           // Direct REST API URL for OneSignal
-        //     );
-        // } catch (\Exception $e) {
-        //     // Handle notification failure
-        //     Log::error('Notification failed for item ' . $readyFeed['title'] . ': ' . $e->getMessage());
-        // }
+        try {
+            // Pass the API URL directly in the notification function
+            $this->sendNotification(
+                'New update: ' . $readyFeed['title'],  // Notification title
+                $readyFeed['description'],             // Notification message
+                $readyFeed['link'],                    // URL for the notification
+                'https://api.onesignal.com',           // Direct REST API URL for OneSignal
+            );
+        } catch (\Exception $e) {
+            // Handle notification failure
+            Log::error('Notification failed for item ' . $readyFeed['title'] . ': ' . $e->getMessage());
+        }
         return response()->json($data);
     }
 

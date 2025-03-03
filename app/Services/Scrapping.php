@@ -141,6 +141,9 @@ public function scrappe(array $customConfigs = [])
                         $link = $itemCrawler->filterXPath('.//link')->text();
     
                         // Skip if already exists
+                        if (RssFeedModel::where('link', $link)->exists()) {
+                            continue;
+                        }
     
     
                         // Get content with retry logic

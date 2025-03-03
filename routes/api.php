@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Response;
 use App\Models\RssFeedModel;
+use App\Http\Controllers\FavoritesourceController;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+
+
 
 
 
@@ -67,4 +72,46 @@ Route::post('/rssfeeds/remove-duplicates', function () {
     }
 
     return response()->json(['message' => 'Duplicates removed successfully']);
+});
+
+
+Route::post('/favorite_sources/store', [FavoriteSourceController::class, 'store']);
+
+Route::get('/ready_feeds', function () {
+    return response()->json(ReadyFeed::all());
+});
+
+
+Route::post('/favorite_sources/fetch', [FavoriteSourceController::class, 'fecth']);
+
+//temporary route
+Route::get('/create-favorite-sources', function () {
+    if (!Schema::hasTable('favorite_sources')) {
+        Schema::create('favorite_sources', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('user_id');
+            $table->text('source');
+            $table->timestamps();
+        });
+        return response()->json(['message' => 'Table favorite_sources created successfully.']);
+    }
+    return response()->json(['message' => 'Table already exists.']);
+});
+
+
+//tempo
+Route::get('/reset-users-table', function () {
+    Schema::dropIfExists('users');
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->string('role');
+        $table->string('password');
+        $table->string('api_token')->nullable();
+        $table->rememberToken();
+        $table->timestamp('email_verified_at')->nullable();
+        $table->timestamps();
+    });
+    return response()->json(['message' => 'Users table reset successfully.']);
 });

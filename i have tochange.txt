@@ -1,0 +1,4 @@
+use and fetch user data by auth token in 
+
+-store favourite source
+-get favourites sources
