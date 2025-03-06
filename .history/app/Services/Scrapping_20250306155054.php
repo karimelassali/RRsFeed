@@ -162,21 +162,20 @@ class Scrapping
                             continue;
                         }
 
-                        $html = null;
                         $itemContentCrawler = null;
                         if (str_contains($sourceUrl, 'pressevda.regione.vda.it')) {
+                            // Use Browsershot with longer wait time
                             $html = Browsershot::url($link)
                                 ->waitUntilNetworkIdle()
-                                ->timeout(30000)
+                                ->timeout(30000) // 30 seconds timeout
                                 ->bodyHtml();
                             $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html); // Log full HTML
                             Log::debug("Raw HTML length for {$link}: " . strlen($html));
+                            Log::debug("Raw HTML snippet for {$link}: " . substr($html, 0, 1000) . '...'); // Log more HTML
                         } else {
-                            $html = $itemResponse->body();
-                            $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html);
-                            Log::debug("Raw HTML length for {$link}: " . strlen($html));
+                            $itemContentCrawler = new Crawler($itemResponse->body());
+                            Log::debug("Raw HTML length for {$link}: " . strlen($itemResponse->body()));
+                            Log::debug("Raw HTML snippet for {$link}: " . substr($itemResponse->body(), 0, 1000) . '...');
                         }
 
                         $title = null;
@@ -193,47 +192,31 @@ class Scrapping
                                 'h1.testi',
                                 'h1',
                                 '#bread ul li:last-child',
+                                'title',               // Should match <title> tag
+                                '[id*="content"] h1',  // Any h1 in a content-related ID
                             ];
                             $descriptionSelectors = [
                                 '#contentgc p',
                                 '#contentgc',
                                 'p',
+                                '#primary_area_full',
+                                '.testi',
+                                '#content',            // Common content container
+                                '[id*="content"] p',   // Any p in a content-related ID
                             ];
 
                             $title = $this->extractContentWithFallback($itemContentCrawler, $titleSelectors);
                             Log::debug("Title extracted for {$link}: " . ($title ?? 'null'));
 
-                            $descriptionNodes = $itemContentCrawler->filter('#contentgc p');
-                            if ($descriptionNodes->count()) {
-                                $description = $descriptionNodes->each(function (Crawler $node) {
-                                    return trim($node->text());
-                                });
-                                $description = implode("\n", array_filter($description));
-                            }
-                            if (empty($description)) {
-                                $description = $this->extractContentWithFallback($itemContentCrawler, $descriptionSelectors);
-                            }
+                            $description = $this->extractContentWithFallback($itemContentCrawler, $descriptionSelectors);
                             Log::debug("Description extracted for {$link}: " . ($description ? substr($description, 0, 100) . '...' : 'null'));
-
-                            if (!$title && $html) {
-                                if (preg_match('/<h1 class="testi">(.*?)<\/h1>/i', $html, $match)) {
-                                    $title = trim($match[1]);
-                                    Log::debug("Fallback title extracted from raw HTML for {$link}: " . $title);
-                                }
-                            }
-                            if (!$description && $html) {
-                                if (preg_match('/<div id="contentgc">.*?<p>(.*?)(?:<div align="right">|<br>)/is', $html, $match)) {
-                                    $description = trim(strip_tags($match[1]));
-                                    Log::debug("Fallback description extracted from raw HTML for {$link}: " . substr($description, 0, 100) . '...');
-                                }
-                            }
                         }
 
                         if (!$title) {
-                            Log::warning("No title found for {$link} after trying all selectors and raw HTML fallback");
+                            Log::warning("No title found for {$link} after trying all selectors");
                         }
                         if (!$description) {
-                            Log::warning("No description found for {$link} after trying all selectors and raw HTML fallback");
+                            Log::warning("No description found for {$link} after trying all selectors");
                         }
                         if (!$title || !$description) {
                             Log::warning("Missing title or description for {$link}");
@@ -281,9 +264,8 @@ class Scrapping
     {
         foreach ($selectors as $selector) {
             try {
-                $nodes = $crawler->filter($selector);
-                if ($nodes->count()) {
-                    $text = trim($nodes->text());
+                if ($crawler->filter($selector)->count()) {
+                    $text = trim($crawler->filter($selector)->text());
                     if (!empty($text)) {
                         Log::debug("Extracted content with selector '{$selector}': " . substr($text, 0, 100) . '...');
                         return $text;

@@ -43,9 +43,11 @@ class DataController extends Controller
                 try {
                     $filters = json_decode($filtersJson, true);
                     if (is_array($filters) && count($filters) > 0) {
-                        $query->whereIn('source', array_map(function ($filter) {
-                            return is_array($filter) && isset($filter['value']) ? $filter['value'] : $filter;
-                        }, $filters));
+                        // Apply filters logic here based on your filter structure
+                        // Example:
+                        foreach ($filters as $filter) {
+                            $query->where($filter['field'], $filter['operator'], $filter['value']);
+                        }
                     }
                 } catch (\Exception $e) {
                     Log::error("Error parsing filters: " . $e->getMessage());
@@ -53,14 +55,12 @@ class DataController extends Controller
             }
 
             // Execute pagination
-            $feeds = $query->paginate($perPage, ['*'], 'page', $page);
+            $allFeeds = [];
+            for ($i = 1; $i <= $page; $i++) {
+                $allFeeds = array_merge($allFeeds, $query->simplePaginate($perPage, ['*'], 'page', $i)->items());
+            }
 
-            return response()->json([
-                'data' => $feeds->items(), // Current page items
-                'current_page' => $feeds->currentPage(),
-                'last_page' => $feeds->lastPage(),
-                'total' => $feeds->total(),
-            ]);
+            return response()->json($allFeeds);
         } catch (\Exception $e) {
             Log::error("Error in getFeedsData: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()

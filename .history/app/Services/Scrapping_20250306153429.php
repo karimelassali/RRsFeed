@@ -7,16 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\RssFeedModel;
 use Symfony\Component\DomCrawler\Crawler;
-use App\Jobs\NotifyingWithNeewFeedJob;
+use App\Jobs\NotifyingWithNeewFeedJob; // Note: Typo in "Neew", should it be "New"?
 use Berkayk\OneSignal\OneSignalFacade as OneSignal;
 use Carbon\Carbon;
-use Spatie\Browsershot\Browsershot;
 
 class Scrapping
 {
     public function index()
     {
         try {
+            $currentDate = Carbon::now();
             return RssFeedModel::orderBy('id', 'desc')->paginate();
         } catch (\Exception $e) {
             Log::error('An error occurred while fetching the RSS feeds: ' . $e->getMessage());
@@ -33,18 +33,26 @@ class Scrapping
     {
         $newItems = [];
 
+        // If custom configurations are provided, skip default sources
         if (!empty($customConfigs)) {
             $newItems = $this->processCustomUrls($customConfigs);
         } else {
+            // Default RSS links from config
             $rssLinks = config('rssfee_sources.links');
+
+            // Process RSS feeds
             $rssItems = $this->processRssFeeds($rssLinks);
+
+            // Combine results
             $newItems = array_merge($rssItems);
         }
 
+        // If no new items found, return early
         if (empty($newItems)) {
             return response()->json(['totalData' => 0, 'data' => []]);
         }
 
+        // Store items and send notifications
         foreach ($newItems as $item) {
             RssFeedModel::create([
                 'source' => $item['source'],
@@ -100,7 +108,7 @@ class Scrapping
         $items = [];
 
         foreach ($links as $sourceUrl) {
-            Log::info("Processing source: {$sourceUrl}");
+            Log::info('Processing source: ' . $sourceUrl);
 
             try {
                 $response = Http::timeout(30)->withOptions(['verify' => false])->get($sourceUrl);
@@ -144,7 +152,7 @@ class Scrapping
                                 Log::error("Connection error for {$link}: " . $e->getMessage());
                                 $attempt++;
                                 if ($attempt >= $maxRetries) {
-                                    continue 2;
+                                    continue 2; // Skip to next item
                                 }
                                 sleep(1);
                             } catch (\Exception $e) {
@@ -162,22 +170,7 @@ class Scrapping
                             continue;
                         }
 
-                        $html = null;
-                        $itemContentCrawler = null;
-                        if (str_contains($sourceUrl, 'pressevda.regione.vda.it')) {
-                            $html = Browsershot::url($link)
-                                ->waitUntilNetworkIdle()
-                                ->timeout(30000)
-                                ->bodyHtml();
-                            $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html); // Log full HTML
-                            Log::debug("Raw HTML length for {$link}: " . strlen($html));
-                        } else {
-                            $html = $itemResponse->body();
-                            $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html);
-                            Log::debug("Raw HTML length for {$link}: " . strlen($html));
-                        }
+                        $itemContentCrawler = new Crawler($itemResponse->body());
 
                         $title = null;
                         $description = null;
@@ -189,52 +182,16 @@ class Scrapping
                             $title = $this->extractContentWithFallback($itemContentCrawler, ['[data-element="news-title"]']);
                             $description = $this->extractContentWithFallback($itemContentCrawler, ['.page-content.paragraph']);
                         } elseif (str_contains($sourceUrl, 'pressevda.regione.vda.it')) {
-                            $titleSelectors = [
-                                'h1.testi',
-                                'h1',
-                                '#bread ul li:last-child',
-                            ];
-                            $descriptionSelectors = [
-                                '#contentgc p',
-                                '#contentgc',
-                                'p',
-                            ];
+                            $titleSelectors = ['h1.testi', 'h1', '#bread ul li:last-child'];
+                            $descriptionSelectors = ['#contentgc p', '#contentgc', 'p'];
 
                             $title = $this->extractContentWithFallback($itemContentCrawler, $titleSelectors);
                             Log::debug("Title extracted for {$link}: " . ($title ?? 'null'));
 
-                            $descriptionNodes = $itemContentCrawler->filter('#contentgc p');
-                            if ($descriptionNodes->count()) {
-                                $description = $descriptionNodes->each(function (Crawler $node) {
-                                    return trim($node->text());
-                                });
-                                $description = implode("\n", array_filter($description));
-                            }
-                            if (empty($description)) {
-                                $description = $this->extractContentWithFallback($itemContentCrawler, $descriptionSelectors);
-                            }
+                            $description = $this->extractContentWithFallback($itemContentCrawler, $descriptionSelectors);
                             Log::debug("Description extracted for {$link}: " . ($description ? substr($description, 0, 100) . '...' : 'null'));
-
-                            if (!$title && $html) {
-                                if (preg_match('/<h1 class="testi">(.*?)<\/h1>/i', $html, $match)) {
-                                    $title = trim($match[1]);
-                                    Log::debug("Fallback title extracted from raw HTML for {$link}: " . $title);
-                                }
-                            }
-                            if (!$description && $html) {
-                                if (preg_match('/<div id="contentgc">.*?<p>(.*?)(?:<div align="right">|<br>)/is', $html, $match)) {
-                                    $description = trim(strip_tags($match[1]));
-                                    Log::debug("Fallback description extracted from raw HTML for {$link}: " . substr($description, 0, 100) . '...');
-                                }
-                            }
                         }
 
-                        if (!$title) {
-                            Log::warning("No title found for {$link} after trying all selectors and raw HTML fallback");
-                        }
-                        if (!$description) {
-                            Log::warning("No description found for {$link} after trying all selectors and raw HTML fallback");
-                        }
                         if (!$title || !$description) {
                             Log::warning("Missing title or description for {$link}");
                             continue;
@@ -281,17 +238,11 @@ class Scrapping
     {
         foreach ($selectors as $selector) {
             try {
-                $nodes = $crawler->filter($selector);
-                if ($nodes->count()) {
-                    $text = trim($nodes->text());
+                if ($crawler->filter($selector)->count()) {
+                    $text = trim($crawler->filter($selector)->text());
                     if (!empty($text)) {
-                        Log::debug("Extracted content with selector '{$selector}': " . substr($text, 0, 100) . '...');
                         return $text;
-                    } else {
-                        Log::debug("Selector '{$selector}' found but text is empty");
                     }
-                } else {
-                    Log::debug("No elements found for selector '{$selector}'");
                 }
             } catch (\Exception $e) {
                 Log::error("Error extracting content with selector {$selector}: " . $e->getMessage());

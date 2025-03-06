@@ -42,7 +42,7 @@ Route::post('/data', function (Request $request) {
 
     // Return the result as a JSON response
     return response()->json($result);
-})->middleware('auth:sanctum');
+});
 
 Route::post('/sign-in',[AuthController::class,'signIn']);
 Route::post('/user/create',[AuthController::class,'store']);
@@ -192,4 +192,17 @@ Route::get('/reset-users-table', function () {
 });
 
 
-Route::get('/publishedArticles', [App\Http\Controllers\DataController::class, 'getReadyData']);
+Route::get('/data/ready', function () {
+    try {
+        $feeds = ReadyFeed::C();
+        return response()->json([
+            'data' => $feeds,
+            'count' => $feeds->count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});

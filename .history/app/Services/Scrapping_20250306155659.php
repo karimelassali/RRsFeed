@@ -170,13 +170,13 @@ class Scrapping
                                 ->timeout(30000)
                                 ->bodyHtml();
                             $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html); // Log full HTML
                             Log::debug("Raw HTML length for {$link}: " . strlen($html));
+                            Log::debug("Raw HTML snippet for {$link}: " . substr($html, 0, 2000) . '...');
                         } else {
                             $html = $itemResponse->body();
                             $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html);
                             Log::debug("Raw HTML length for {$link}: " . strlen($html));
+                            Log::debug("Raw HTML snippet for {$link}: " . substr($html, 0, 2000) . '...');
                         }
 
                         $title = null;
@@ -190,19 +190,20 @@ class Scrapping
                             $description = $this->extractContentWithFallback($itemContentCrawler, ['.page-content.paragraph']);
                         } elseif (str_contains($sourceUrl, 'pressevda.regione.vda.it')) {
                             $titleSelectors = [
-                                'h1.testi',
-                                'h1',
-                                '#bread ul li:last-child',
+                                'h1.testi',            // Primary title
+                                'h1',                  // Fallback
+                                '#bread ul li:last-child', // Breadcrumb fallback
                             ];
                             $descriptionSelectors = [
-                                '#contentgc p',
-                                '#contentgc',
-                                'p',
+                                '#contentgc p',        // Primary content paragraphs
+                                '#contentgc',          // Entire content div
+                                'p',                   // Any paragraph
                             ];
 
                             $title = $this->extractContentWithFallback($itemContentCrawler, $titleSelectors);
                             Log::debug("Title extracted for {$link}: " . ($title ?? 'null'));
 
+                            // Extract all text from #contentgc p tags and join them
                             $descriptionNodes = $itemContentCrawler->filter('#contentgc p');
                             if ($descriptionNodes->count()) {
                                 $description = $descriptionNodes->each(function (Crawler $node) {
@@ -215,6 +216,7 @@ class Scrapping
                             }
                             Log::debug("Description extracted for {$link}: " . ($description ? substr($description, 0, 100) . '...' : 'null'));
 
+                            // Fallback to raw HTML parsing if Crawler fails
                             if (!$title && $html) {
                                 if (preg_match('/<h1 class="testi">(.*?)<\/h1>/i', $html, $match)) {
                                     $title = trim($match[1]);

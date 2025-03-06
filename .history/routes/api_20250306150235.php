@@ -42,7 +42,7 @@ Route::post('/data', function (Request $request) {
 
     // Return the result as a JSON response
     return response()->json($result);
-})->middleware('auth:sanctum');
+})->midd;
 
 Route::post('/sign-in',[AuthController::class,'signIn']);
 Route::post('/user/create',[AuthController::class,'store']);

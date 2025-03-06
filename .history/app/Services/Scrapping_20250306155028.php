@@ -170,13 +170,13 @@ class Scrapping
                                 ->timeout(30000)
                                 ->bodyHtml();
                             $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html); // Log full HTML
                             Log::debug("Raw HTML length for {$link}: " . strlen($html));
+                            Log::debug("Raw HTML snippet for {$link}: " . substr($html, 0, 2000) . '...'); // Increased to 2000 chars
                         } else {
                             $html = $itemResponse->body();
                             $itemContentCrawler = new Crawler($html);
-                            Log::debug("Full Raw HTML for {$link}: " . $html);
                             Log::debug("Raw HTML length for {$link}: " . strlen($html));
+                            Log::debug("Raw HTML snippet for {$link}: " . substr($html, 0, 2000) . '...');
                         }
 
                         $title = null;
@@ -193,38 +193,30 @@ class Scrapping
                                 'h1.testi',
                                 'h1',
                                 '#bread ul li:last-child',
+                                'title',
+                                '[id*="content"] h1',
                             ];
                             $descriptionSelectors = [
                                 '#contentgc p',
                                 '#contentgc',
                                 'p',
+                                '#primary_area_full',
+                                '.testi',
+                                '#content',
+                                '[id*="content"] p',
                             ];
 
                             $title = $this->extractContentWithFallback($itemContentCrawler, $titleSelectors);
                             Log::debug("Title extracted for {$link}: " . ($title ?? 'null'));
 
-                            $descriptionNodes = $itemContentCrawler->filter('#contentgc p');
-                            if ($descriptionNodes->count()) {
-                                $description = $descriptionNodes->each(function (Crawler $node) {
-                                    return trim($node->text());
-                                });
-                                $description = implode("\n", array_filter($description));
-                            }
-                            if (empty($description)) {
-                                $description = $this->extractContentWithFallback($itemContentCrawler, $descriptionSelectors);
-                            }
+                            $description = $this->extractContentWithFallback($itemContentCrawler, $descriptionSelectors);
                             Log::debug("Description extracted for {$link}: " . ($description ? substr($description, 0, 100) . '...' : 'null'));
 
+                            // Fallback to raw HTML parsing if Crawler fails
                             if (!$title && $html) {
-                                if (preg_match('/<h1 class="testi">(.*?)<\/h1>/i', $html, $match)) {
+                                if (preg_match('/<title>(.*?)<\/title>/i', $html, $match)) {
                                     $title = trim($match[1]);
                                     Log::debug("Fallback title extracted from raw HTML for {$link}: " . $title);
-                                }
-                            }
-                            if (!$description && $html) {
-                                if (preg_match('/<div id="contentgc">.*?<p>(.*?)(?:<div align="right">|<br>)/is', $html, $match)) {
-                                    $description = trim(strip_tags($match[1]));
-                                    Log::debug("Fallback description extracted from raw HTML for {$link}: " . substr($description, 0, 100) . '...');
                                 }
                             }
                         }
@@ -233,7 +225,7 @@ class Scrapping
                             Log::warning("No title found for {$link} after trying all selectors and raw HTML fallback");
                         }
                         if (!$description) {
-                            Log::warning("No description found for {$link} after trying all selectors and raw HTML fallback");
+                            Log::warning("No description found for {$link} after trying all selectors");
                         }
                         if (!$title || !$description) {
                             Log::warning("Missing title or description for {$link}");

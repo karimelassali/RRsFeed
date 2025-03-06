@@ -42,7 +42,7 @@ Route::post('/data', function (Request $request) {
 
     // Return the result as a JSON response
     return response()->json($result);
-})->middleware('auth:sanctum');
+});
 
 Route::post('/sign-in',[AuthController::class,'signIn']);
 Route::post('/user/create',[AuthController::class,'store']);
@@ -192,4 +192,6 @@ Route::get('/reset-users-table', function () {
 });
 
 
-Route::get('/publishedArticles', [App\Http\Controllers\DataController::class, 'getReadyData']);
+Route::get('/data/ready',function () {
+    return response()->json([]);
+});
