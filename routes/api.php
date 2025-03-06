@@ -115,3 +115,8 @@ Route::get('/reset-users-table', function () {
     });
     return response()->json(['message' => 'Users table reset successfully.']);
 });
+
+
+Route::get('/data/ready',function () {
+    return response()->json(ReadyFeed::all());
+});

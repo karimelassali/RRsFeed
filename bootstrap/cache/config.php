@@ -319,7 +319,7 @@
       array (
         'driver' => 'sqlite',
         'url' => NULL,
-        'database' => 'rssfeed',
+        'database' => '/home/karim/Desktop/RRsFeed-main/database/database.sqlite',
         'prefix' => '',
         'foreign_key_constraints' => true,
         'busy_timeout' => NULL,
@@ -352,7 +352,7 @@
         'url' => NULL,
         'host' => '127.0.0.1',
         'port' => '3306',
-        'database' => 'rssfeed',
+        'database' => 'laravel',
         'username' => 'root',
         'password' => '',
         'unix_socket' => '',
@@ -371,8 +371,8 @@
         'driver' => 'pgsql',
         'url' => NULL,
         'host' => '127.0.0.1',
-        'port' => '3306',
-        'database' => 'rssfeed',
+        'port' => '5432',
+        'database' => 'laravel',
         'username' => 'root',
         'password' => '',
         'charset' => 'utf8',
@@ -385,9 +385,9 @@
       array (
         'driver' => 'sqlsrv',
         'url' => NULL,
-        'host' => '127.0.0.1',
-        'port' => '3306',
-        'database' => 'rssfeed',
+        'host' => 'localhost',
+        'port' => '1433',
+        'database' => 'laravel',
         'username' => 'root',
         'password' => '',
         'charset' => 'utf8',
@@ -698,13 +698,13 @@
     ),
     'batching' => 
     array (
-      'database' => 'mysql',
+      'database' => 'sqlite',
       'table' => 'job_batches',
     ),
     'failed' => 
     array (
       'driver' => 'database-uuids',
-      'database' => 'mysql',
+      'database' => 'sqlite',
       'table' => 'failed_jobs',
     ),
   ),

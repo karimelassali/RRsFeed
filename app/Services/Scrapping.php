@@ -88,8 +88,8 @@ public function scrappe(array $customConfigs = [])
 
     public function sendNotification($title, $message, $url, $restApiUrl)
     {
-        $appId = config('services.onesignal.app_id');
-        $restApiKey = config('services.onesignal.rest_api_key');
+        $appId = 'e8dd6f91-e21d-4a9c-bab4-f8440b7d63b0';
+        $restApiKey = 'os_v2_app_5dow7epcdvfjzovu7bcaw7ldwcijmaimzf7unvet2utpbxyy7yfqxkfrlpi4wk4xezcifgjkoo4w4hlq6hqcm5swzffepffe66ztclq';
 
         $response = Http::withHeaders([
             'Authorization' => 'Basic ' . $restApiKey,

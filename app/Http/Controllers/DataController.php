@@ -81,14 +81,27 @@ class DataController extends Controller
         return response()->json($data);
     }
 
+
+
     public function publishArticle(Request $request, $id)
     {
+        try {
+            Log::info('Publishing article with ID: ' . $id, [
+                'title' => $request->get('title'),
+                'description' => $request->get('description'),
+                'image' => $request->input('image'),
+                'category' => $request->input('category'),
+                'showInHomePage' => $request->get('showInHomePage'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error logging article publish: ' . $e->getMessage());
+        }
         $data = RssFeedModel::find($id);
         $data->isPublished = true;
         $data->save();
         $readyFeed = new ReadyFeed();
         $readyFeed->title = $request->get('title') ?? '';
-        $readyFeed->description = $request->input('description') ?? '';
+        $readyFeed->description = $request->get('description') ?? '';
         $readyFeed->image = $request->input('image') ?? '';
         $readyFeed->category = $request->input('category') ?? '';
         $readyFeed->showInHomePage = $request->get('showInHomePage') ?? true;
@@ -111,6 +124,37 @@ class DataController extends Controller
             Log::error('Notification failed for item ' . $readyFeed['title'] . ': ' . $e->getMessage());
         }
         return response()->json($data);
+    }
+
+
+    // public function getReadyData(Request $request)
+    // {
+    //     $data = ReadyFeed::all();
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $data
+    //     ]);
+    // }
+
+
+    public function getReadyFeeds(Request $request)
+    {
+        try {
+            $data = ReadyFeed::all();
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getReadyData: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function sendNotification($title, $message, $url, $restApiUrl)
