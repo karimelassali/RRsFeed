@@ -11,6 +11,8 @@ use App\Models\RssFeedModel;
 use App\Http\Controllers\FavoritesourceController;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Str;
+
 
 
 
@@ -52,49 +54,98 @@ Route::post('/user/create',[AuthController::class,'store']);
 // Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
 
 
+
+
 Route::post('/rssfeeds/remove-duplicates', function () {
     try {
         DB::beginTransaction();
-        
-        // Find records with duplicate titles and descriptions
-        $duplicates = RssFeedModel::select('title', 'description')
+
+        // Normalize content for better duplicate detection
+        $normalizeContent = function ($text) {
+            return Str::lower(
+                trim(
+                    preg_replace(
+                        '/[^\p{L}\p{N}\s]/u', // Remove special characters, keep letters and numbers
+                        '',
+                        strip_tags($text) // Remove HTML tags
+                    )
+                )
+            );
+        };
+
+        // Use a more efficient query with subquery to get duplicates
+        $duplicates = DB::table('rss_feeds') // Replace with your actual table name if different
+            ->select('title', 'description', DB::raw('MIN(id) as keep_id'))
             ->groupBy('title', 'description')
             ->havingRaw('COUNT(*) > 1')
             ->get();
-        
+
         $deletedCount = 0;
-        
+        $processedTitles = []; // Track processed normalized titles
+
         foreach ($duplicates as $duplicate) {
-            // For each set of duplicates, keep only the oldest record (lowest ID)
-            $recordsToDelete = RssFeedModel::where('title', $duplicate->title)
+            $normalizedTitle = $normalizeContent($duplicate->title);
+            $normalizedDesc = $normalizeContent($duplicate->description);
+
+            // Skip if we've already processed this content combination
+            $contentKey = md5($normalizedTitle . $normalizedDesc);
+            if (in_array($contentKey, $processedTitles)) {
+                continue;
+            }
+
+            // Get all records for this duplicate set
+            $records = RssFeedModel::where('title', $duplicate->title)
                 ->where('description', $duplicate->description)
-                ->orderBy('id')
+                ->where('id', '!=', $duplicate->keep_id)
                 ->get();
-            
-            // Skip the first record (lowest ID) and delete the rest
-            if ($recordsToDelete->count() > 1) {
-                $keepId = $recordsToDelete->first()->id;
-                
-                $deletedCount += RssFeedModel::where('title', $duplicate->title)
-                    ->where('description', $duplicate->description)
-                    ->where('id', '!=', $keepId)
-                    ->delete();
+
+            if ($records->count() > 0) {
+                // Delete duplicates in chunks for better memory management
+                $recordIds = $records->pluck('id')->toArray();
+                $chunks = array_chunk($recordIds, 100); // Process 100 at a time
+
+                foreach ($chunks as $chunk) {
+                    $deletedCount += RssFeedModel::whereIn('id', $chunk)->delete();
+                }
+
+                // Log the deletion
+                Log::info('Removed duplicate RSS feed entries', [
+                    'title' => $duplicate->title,
+                    'count' => count($recordIds),
+                    'kept_id' => $duplicate->keep_id
+                ]);
+
+                $processedTitles[] = $contentKey;
             }
         }
-        
+
         DB::commit();
-        
+
+        // Calculate execution time
+        $executionTime = microtime(true) - LARAVEL_START;
+
         return response()->json([
             'success' => true,
-            'message' => 'Duplicates removed successfully',
-            'deleted_count' => $deletedCount
+            'message' => 'Duplicate removal completed successfully',
+            'deleted_count' => $deletedCount,
+            'execution_time' => round($executionTime, 3) . ' seconds',
+            'processed_unique_entries' => count($processedTitles)
         ]);
-        
+
     } catch (\Exception $e) {
         DB::rollBack();
+
+        // Log the error with more context
+        Log::error('Failed to remove duplicate RSS feeds', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
         return response()->json([
             'success' => false,
-            'message' => 'Error removing duplicates: ' . $e->getMessage()
+            'message' => 'Failed to remove duplicates',
+            'error' => $e->getMessage(),
+            'timestamp' => now()->toDateTimeString()
         ], 500);
     }
 });
