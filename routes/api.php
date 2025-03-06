@@ -53,27 +53,51 @@ Route::post('/user/create',[AuthController::class,'store']);
 
 
 Route::post('/rssfeeds/remove-duplicates', function () {
-    // Group by 'link' to find duplicates (adjust the field if needed)
-    $duplicates = RssFeedModel::select('link')
-        ->groupBy('link')
-        ->havingRaw('COUNT(*) > 1')
-        ->get();
-
-    foreach ($duplicates as $duplicate) {
-        // Get all records with the duplicate link, ordered by ID
-        $records = RssFeedModel::where('link', $duplicate->link)
-            ->orderBy('id')
+    try {
+        DB::beginTransaction();
+        
+        // Find records with duplicate titles and descriptions
+        $duplicates = RssFeedModel::select('title', 'description')
+            ->groupBy('title', 'description')
+            ->havingRaw('COUNT(*) > 1')
             ->get();
-
-        // Delete all except the first record
-        if ($records->count() > 1) {
-            $records->slice(1)->each->delete();
+        
+        $deletedCount = 0;
+        
+        foreach ($duplicates as $duplicate) {
+            // For each set of duplicates, keep only the oldest record (lowest ID)
+            $recordsToDelete = RssFeedModel::where('title', $duplicate->title)
+                ->where('description', $duplicate->description)
+                ->orderBy('id')
+                ->get();
+            
+            // Skip the first record (lowest ID) and delete the rest
+            if ($recordsToDelete->count() > 1) {
+                $keepId = $recordsToDelete->first()->id;
+                
+                $deletedCount += RssFeedModel::where('title', $duplicate->title)
+                    ->where('description', $duplicate->description)
+                    ->where('id', '!=', $keepId)
+                    ->delete();
+            }
         }
+        
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Duplicates removed successfully',
+            'deleted_count' => $deletedCount
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Error removing duplicates: ' . $e->getMessage()
+        ], 500);
     }
-
-    return response()->json(['message' => 'Duplicates removed successfully']);
 });
-
 
 Route::post('/favorite_sources/store', [FavoriteSourceController::class, 'store']);
 

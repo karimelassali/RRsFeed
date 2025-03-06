@@ -712,11 +712,7 @@
   array (
     'links' => 
     array (
-      0 => 'https://www.ansa.it/valledaosta/notizie/valledaosta_rss.xml',
-      1 => 'https://www.comune.aosta.it/it/events/feed',
-      2 => 'https://www.comune.aosta.it/it/news/feed',
-      3 => 'https://pressevda.regione.vda.it/it/events/feed',
-      4 => 'https://pressevda.regione.vda.it/it/news/feed',
+      0 => 'https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml',
     ),
   ),
   'sanctum' => 
