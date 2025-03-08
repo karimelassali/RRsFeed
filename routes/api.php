@@ -11,21 +11,25 @@ use App\Models\RssFeedModel;
 use App\Http\Controllers\FavoritesourceController;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use App\Http\Controllers\DataController;
 
 
 
 
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
+
+
+
+Route::middleware(['auth.api:sanctum'])->group(function () {
+    Route::get('/user', function (Request $request) {
+        return response()->json($request->user());
+    });
+    Route::get('/data', [DataController::class, 'getFeedsData']);
+    Route::post('/data/{id}/publish', [DataController::class, 'publishArticle']);
+    Route::get('/ready_feeds', [DataController::class, 'getReadyFeeds']);
 });
 
-Route::get('/data', [App\Http\Controllers\DataController::class, 'getFeedsData']);
-
-Route::get('/data/{id}', [App\Http\Controllers\DataController::class, 'getSpeceficData']);
-
-Route::post('/article/publish/{id}', [App\Http\Controllers\DataController::class, 'publishArticle']);
-
+Route::get('/data/{id}', [DataController::class, 'getSpeceficData']);
 
 
 Route::post('/data', function (Request $request) {

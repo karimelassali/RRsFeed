@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,18 +15,23 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
         $middleware->validateCsrfTokens(except: ['api/*']);
 
         $middleware->alias([
+            'auth.api' => \App\Http\Middleware\AuthenticateApi::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            // 'clerk' => \App\Http\Middleware\ClerkAuthMiddleware::class
         ]);
 
-        //
+        $middleware->redirectGuestsTo(function (Request $request) {
+            \Log::info('RedirectGuestsTo triggered (fallback)', [
+                'path' => $request->path(),
+                'expectsJson' => $request->expectsJson(),
+            ]);
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-
