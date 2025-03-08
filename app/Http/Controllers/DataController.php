@@ -126,7 +126,7 @@ class DataController extends Controller
 
     public function getReadyData(Request $request)
     {
-        $data = ReadyFeed::all();
+        $data = ReadyFeed::orderByDesc('created_at')->get();
         return response()->json([
             'success' => true,
             'data' => $data

@@ -25,11 +25,11 @@ Route::middleware(['auth.api:sanctum'])->group(function () {
         return response()->json($request->user());
     });
     Route::get('/data', [DataController::class, 'getFeedsData']);
-    Route::post('/data/{id}/publish', [DataController::class, 'publishArticle']);
     Route::get('/ready_feeds', [DataController::class, 'getReadyFeeds']);
 });
 
 Route::get('/data/{id}', [DataController::class, 'getSpeceficData']);
+Route::post('/article/{id}/publish', [DataController::class, 'publishArticle']);
 
 
 Route::post('/data', function (Request $request) {
@@ -148,3 +148,6 @@ Route::get('/reset-users-table', function () {
 Route::get('/data/ready',function () {
     return response()->json(ReadyFeed::all());
 });
+
+
+Route::get('/publishedArticles', [App\Http\Controllers\DataController::class, 'getReadyData']);
