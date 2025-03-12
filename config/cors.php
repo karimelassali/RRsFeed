@@ -13,6 +13,7 @@ return [
     ],
 
     'allowed_origins' => [
+        'http://localhost:3000',
         env('FRONTEND_URL', 'https://rssfeed-frontend.vercel.app'),
         // Add your production URL when deploying
         // env('PRODUCTION_FRONTEND_URL'),

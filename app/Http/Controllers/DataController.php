@@ -21,15 +21,13 @@ class DataController extends Controller
     public function getFeedsData(Request $request)
     {
         try {
-            // Get pagination parameters
             $page = $request->query('page', 1);
             $perPage = $request->query('pageSize', 10);
-
-            // Start query builder
+    
             $query = RssFeedModel::select('id', 'title', 'description', 'source', 'pubDate', 'isPublished')
                 ->latest('pubDate');
-
-            // Add search condition if provided
+    
+            // Apply search if provided
             if ($search = $request->query('search')) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -37,20 +35,31 @@ class DataController extends Controller
                       ->orWhere('source', 'like', "%{$search}%");
                 });
             }
-
-            // Handle active filters if provided
+    
+            // Apply filters if provided
             if ($filtersJson = $request->query('activeFilters')) {
+<<<<<<< HEAD
                 try {
                     $filters = json_decode($filtersJson, true);
                     if (is_array($filters) && count($filters) > 0) {
                         $query->whereIn('source', array_map(function ($filter) {
                             return is_array($filter) && isset($filter['value']) ? $filter['value'] : $filter;
                         }, $filters));
+=======
+                $filters = json_decode($filtersJson, true);
+                if (is_array($filters) && !empty($filters)) {
+                    // If filters is an object like { "source": "value" }, extract the source value
+                    if (isset($filters['source'])) {
+                        $query->where('source', $filters['source']);
+                    } else {
+                        // If filters is an array of sources, use whereIn
+                        $sources = array_values($filters);
+                        $query->whereIn('source', $sources);
+>>>>>>> publishing
                     }
-                } catch (\Exception $e) {
-                    Log::error("Error parsing filters: " . $e->getMessage());
                 }
             }
+<<<<<<< HEAD
 
             // Execute pagination
             $feeds = $query->paginate($perPage, ['*'], 'page', $page);
@@ -60,12 +69,23 @@ class DataController extends Controller
                 'current_page' => $feeds->currentPage(),
                 'last_page' => $feeds->lastPage(),
                 'total' => $feeds->total(),
+=======
+    
+            $feeds = $query->paginate($perPage, ['*'], 'page', $page);
+    
+            return response()->json([
+                'data' => $feeds->items(),
+                'pagination' => [
+                    'current_page' => $feeds->currentPage(),
+                    'total_pages' => $feeds->lastPage(),
+                    'total_items' => $feeds->total(),
+                ],
+>>>>>>> publishing
             ]);
         } catch (\Exception $e) {
             Log::error("Error in getFeedsData: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while fetching data.',
@@ -73,8 +93,6 @@ class DataController extends Controller
             ], 500);
         }
     }
-
-
     public function getSpeceficData(Request $request, $id)
     {
         $data = RssFeedModel::find($id);
@@ -129,7 +147,11 @@ class DataController extends Controller
 
     public function getReadyData(Request $request)
     {
+<<<<<<< HEAD
         $data = ReadyFeed::all();
+=======
+        $data = ReadyFeed::orderByDesc('created_at')->get();
+>>>>>>> publishing
         return response()->json([
             'success' => true,
             'data' => $data

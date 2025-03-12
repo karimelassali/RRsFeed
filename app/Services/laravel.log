@@ -1,0 +1,23 @@
+[2025-03-10 12:05:29] production.INFO: Processing RSS feed: https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:05:39] production.ERROR: Connection error on attempt 0 for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:05:51] production.ERROR: Connection error on attempt 1 for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml: cURL error 28: Connection timed out after 10000 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:06:03] production.ERROR: Connection error on attempt 2 for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:06:03] production.ERROR: Failed to fetch RSS feed https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml after 3 attempts: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:06:03] production.INFO: Processing RSS feed: https://www.ansa.it/valledaosta/notizie/valledaosta_rss.xml  
+[2025-03-10 12:06:03] production.INFO: Processing RSS feed: https://www.comune.aosta.it/it/events/feed  
+[2025-03-10 12:06:04] production.INFO: Processing RSS feed: https://www.comune.aosta.it/it/news/feed  
+[2025-03-10 12:06:04] production.INFO: Processing RSS feed: https://pressevda.regione.vda.it/it/events/feed  
+[2025-03-10 12:06:05] production.INFO: Processing RSS feed: https://pressevda.regione.vda.it/it/news/feed  
+[2025-03-10 12:12:50] production.INFO: Processing RSS feed: https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:13:37] production.INFO: Sign-in attempt {"email":"digival@diginews.com"} 
+[2025-03-10 12:13:37] production.INFO: Validation passed {"email":"digival@diginews.com"} 
+[2025-03-10 12:13:37] production.INFO: Authentication successful {"user_id":1} 
+[2025-03-10 12:13:37] production.INFO: Token created successfully {"user_id":1} 
+[2025-03-10 12:13:48] production.ERROR: Error processing RSS feed https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://appweb.regione.vda.it/DBWeb/Comunicati.nsf/RSScomunicati.xml  
+[2025-03-10 12:13:48] production.INFO: Processing RSS feed: https://www.ansa.it/valledaosta/notizie/valledaosta_rss.xml  
+[2025-03-10 12:13:48] production.INFO: Processing RSS feed: https://www.comune.aosta.it/it/events/feed  
+[2025-03-10 12:13:49] production.INFO: Processing RSS feed: https://www.comune.aosta.it/it/news/feed  
+[2025-03-10 12:13:50] production.INFO: Processing RSS feed: https://pressevda.regione.vda.it/it/events/feed  
+[2025-03-10 12:13:51] production.INFO: Processing RSS feed: https://pressevda.regione.vda.it/it/news/feed  
+[2025-03-10 12:13:52] production.INFO: Notification sent successfully!  
+[2025-03-10 12:13:52] production.INFO: Notification sent successfully!  

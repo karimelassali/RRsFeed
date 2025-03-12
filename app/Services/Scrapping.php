@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\RssFeedModel;
 use Symfony\Component\DomCrawler\Crawler;
+<<<<<<< HEAD
 use App\Jobs\NotifyingWithNeewFeedJob;
 use Berkayk\OneSignal\OneSignalFacade as OneSignal;
+=======
+>>>>>>> publishing
 use Carbon\Carbon;
 use Spatie\Browsershot\Browsershot;
 
@@ -100,11 +103,28 @@ class Scrapping
         $items = [];
 
         foreach ($links as $sourceUrl) {
+<<<<<<< HEAD
             Log::info("Processing source: {$sourceUrl}");
 
             try {
                 $response = Http::timeout(30)->withOptions(['verify' => false])->get($sourceUrl);
 
+=======
+            Log::info('Processing RSS feed: ' . $sourceUrl);
+    
+            try {
+                // Explicitly set cURL options to override defaults
+                $response = Http::withOptions([
+                    'verify' => false,
+                    'curl' => [
+                        CURLOPT_CONNECTTIMEOUT => 30, // 30 seconds to connect
+                        CURLOPT_TIMEOUT => 60,        // 60 seconds total timeout
+                    ],
+                ])
+                ->retry(5, 2000) // 5 retries, 2-second delay
+                ->get($sourceUrl);
+    
+>>>>>>> publishing
                 if (!$response->successful()) {
                     Log::error("Failed to fetch RSS feed {$sourceUrl}: HTTP {$response->status()}");
                     continue;
@@ -116,13 +136,18 @@ class Scrapping
                 foreach ($crawler->filter('item') as $item) {
                     try {
                         $itemCrawler = new Crawler($item);
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> publishing
                         if (!$itemCrawler->filterXPath('.//link')->count()) {
                             Log::warning("No link found for item in {$sourceUrl}");
                             continue;
                         }
 
                         $link = $itemCrawler->filterXPath('.//link')->text();
+<<<<<<< HEAD
 
                         if (RssFeedModel::where('link', $link)->exists()) {
                             continue;
@@ -226,6 +251,44 @@ class Scrapping
                                     $description = trim(strip_tags($match[1]));
                                     Log::debug("Fallback description extracted from raw HTML for {$link}: " . substr($description, 0, 100) . '...');
                                 }
+=======
+    
+                        if (RssFeedModel::where('link', $link)->exists()) {
+                            continue;
+                        }
+    
+                        $itemResponse = Http::withOptions([
+                            'verify' => false,
+                            'curl' => [
+                                CURLOPT_CONNECTTIMEOUT => 30,
+                                CURLOPT_TIMEOUT => 60,
+                            ],
+                        ])
+                        ->retry(3, 1000)
+                        ->get($link);
+    
+                        if (!$itemResponse->successful()) {
+                            Log::error("Failed to fetch content for {$link}: HTTP {$itemResponse->status()}");
+                            continue;
+                        }
+    
+                        $itemContentCrawler = new Crawler($itemResponse->body());
+    
+                        $title = null;
+                        $description = null;
+    
+                        try {
+                            if (str_contains($sourceUrl, 'ansa.it')) {
+                                $title = $this->extractContent($itemContentCrawler, '.post-single-title');
+                                $description = $this->extractContent($itemContentCrawler, '.post-single-text');
+                            } elseif (str_contains($sourceUrl, 'comune.aosta.it')) {
+                                $title = $this->extractContent($itemContentCrawler, '[data-element="news-title"]');
+                                $description = $this->extractContent($itemContentCrawler, '.page-content.paragraph');
+                            } elseif (str_contains($sourceUrl, 'pressevda.regione.vda.it') || str_contains($sourceUrl, 'appweb.regione.vda.it')) {
+                                $rawTitle = $this->extractContent($itemContentCrawler, 'h1.testi');
+                                $title = $this->removeDateFromTitle($rawTitle);
+                                $description = $this->extractContent($itemContentCrawler, '#contentgc');
+>>>>>>> publishing
                             }
                         }
 
@@ -245,7 +308,11 @@ class Scrapping
                             'Riproduzione riservata  Copyright Digival',
                             $description
                         );
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> publishing
                         $pubDate = date('Y-m-d H:i:s');
                         if ($itemCrawler->filterXPath('.//pubDate')->count()) {
                             try {
@@ -277,6 +344,7 @@ class Scrapping
         return $items;
     }
 
+<<<<<<< HEAD
     private function extractContentWithFallback(Crawler $crawler, array $selectors): ?string
     {
         foreach ($selectors as $selector) {
@@ -298,6 +366,18 @@ class Scrapping
             }
         }
         return null;
+=======
+    private function removeDateFromTitle(?string $title): ?string
+    {
+        if (!$title) {
+            return null;
+        }
+
+        $pattern = '/^\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}:\d{2}\s*-\s*/';
+        $cleanedTitle = preg_replace($pattern, '', $title);
+
+        return trim($cleanedTitle);
+>>>>>>> publishing
     }
 
     private function processCustomUrls(array $customConfigs): array
@@ -320,9 +400,16 @@ class Scrapping
 
                 $crawler = new Crawler($response->body());
 
+<<<<<<< HEAD
                 $title = $this->extractContentWithFallback($crawler, [$titleSelector]);
                 $description = $this->extractContentWithFallback($crawler, [$descriptionSelector]);
                 $pubDate = $pubDateSelector ? $this->extractContentWithFallback($crawler, [$pubDateSelector]) : null;
+=======
+                $title = $this->extractContent($crawler, $titleSelector);
+                $description = $this->extractContent($crawler, $descriptionSelector);
+
+                $pubDate = $pubDateSelector ? $this->extractContent($crawler, $pubDateSelector) : null;
+>>>>>>> publishing
 
                 if ($pubDate) {
                     try {
@@ -356,4 +443,18 @@ class Scrapping
 
         return $items;
     }
+<<<<<<< HEAD
 }
+=======
+
+    private function extractContent(Crawler $crawler, string $selector): ?string
+    {
+        try {
+            return $crawler->filter($selector)->count() ? trim($crawler->filter($selector)->text()) : null;
+        } catch (\Exception $e) {
+            Log::error("Error extracting content with selector {$selector}: " . $e->getMessage());
+            return null;
+        }
+    }
+}
+>>>>>>> publishing
