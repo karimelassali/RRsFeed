@@ -3,14 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-
 
 
 
@@ -86,60 +83,7 @@ class AuthController extends Controller
         //
     }
 
-
-public function setApiKey(Request $request)
-{
-    try {
-        // Validate request
-        $validated = $request->validate([
-            'api_key' => 'required|string'
-        ]);
-
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found or unauthorized',
-            ], 401);
-        }
-
-        try {
-            User::where('id', $user->id)->update([
-                'api_token' => $validated['api_key'],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to update API key', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'message' => 'Failed to update API key',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-
-        return response()->json([
-            'user' => $user,
-            'message' => 'API key updated successfully .',
-        ], 200);
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json([
-            'message' => 'Validation error',
-            'errors' => $e->errors()
-        ], 422);
-    } catch (\Exception $e) {
-        Log::error('Unexpected error while updating API key', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-
-        return response()->json([
-            'message' => 'An unexpected error occurred',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
+    public 
 
     public function signIn(Request $request)
 {

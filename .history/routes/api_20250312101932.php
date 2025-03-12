@@ -12,7 +12,13 @@ use App\Http\Controllers\FavoritesourceController;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use App\Http\Controllers\DataController;
-use Illuminate\Container\Attributes\Auth;
+
+
+
+
+
+
+
 
 Route::middleware(['auth.api:sanctum'])->group(function () {
     Route::get('/user', function (Request $request) {
@@ -20,7 +26,6 @@ Route::middleware(['auth.api:sanctum'])->group(function () {
     });
     Route::get('/data', [DataController::class, 'getFeedsData']);
     Route::get('/ready_feeds', [DataController::class, 'getReadyFeeds']);
-    Route::put('settings/setApiKey',[AuthController::class,'setApiKey'])->middleware('auth:sanctum');
 });
 
 Route::get('/data/{id}', [DataController::class, 'getSpeceficData']);
@@ -281,3 +286,4 @@ Route::get('ts', function () {
             });
 
 
+Route

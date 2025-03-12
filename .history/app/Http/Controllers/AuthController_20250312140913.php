@@ -120,7 +120,7 @@ public function setApiKey(Request $request)
 
         return response()->json([
             'user' => $user,
-            'message' => 'API key updated successfully .',
+            'message' => 'API key updated successfully in dat',
         ], 200);
 
     } catch (\Illuminate\Validation\ValidationException $e) {

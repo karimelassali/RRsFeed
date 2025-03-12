@@ -20,7 +20,6 @@ Route::middleware(['auth.api:sanctum'])->group(function () {
     });
     Route::get('/data', [DataController::class, 'getFeedsData']);
     Route::get('/ready_feeds', [DataController::class, 'getReadyFeeds']);
-    Route::put('settings/setApiKey',[AuthController::class,'setApiKey'])->middleware('auth:sanctum');
 });
 
 Route::get('/data/{id}', [DataController::class, 'getSpeceficData']);
@@ -281,3 +280,4 @@ Route::get('ts', function () {
             });
 
 
+Route::get('s',[AuthController::class,'sensitiveData'])->mi;
