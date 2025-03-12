@@ -17,14 +17,14 @@ class FavoritesourceController extends Controller
 
         try {
             $favorite = FavoriteSource::where('user_id', $validatedData['user_id'])
-            ->where('source', $validatedData['source'])->first();
+            ->where('source', $validatedData['source']);
             if ($favorite) {
-                return response()->json(['message' => 'This source is already a favorite source']);
+                return response()->json(['message' => 'Questa fonte   gi  un elenco dei preferiti','type' => 'warning']);
             }else{
                 $source = parse_url($validatedData['source'])['host'];
                 $validatedData['source'] = $source;
                 FavoriteSource::create($validatedData);
-                return response()->json(['message' => $validatedData['source'] . ' added as a favorite source successfully']);
+                return response()->json(['message' => $validatedData['source'] . ' aggiunta come fonte preferita con successo','type' => 'success','source' => $validatedData,'exists' => $favorite],200);
             }
             
         } catch (\Exception $e) {
@@ -39,7 +39,7 @@ class FavoritesourceController extends Controller
     {
         try{
             $userId = $request->user_id;
-            $favorite = FavoriteSource::where('user_id', $userId)->get();
+            $favorite = FavoriteSource::where('user_id', $userId)->orderBy('id', 'desc')->get();
             return response()->json([
                 'message' =>  "{$favorite->count()} favorite sources found",
                 'sources' => $favorite  ]);
