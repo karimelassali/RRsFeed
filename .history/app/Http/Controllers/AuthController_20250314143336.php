@@ -211,11 +211,9 @@ public function getStatistics(Request $request){
     $total_feeds = RssFeedModel::all()->count();
 
     $published_articles = ReadyFeed::all()->count();
-    $scheduled_articles = ReadyFeed::where('publishType', 'schedule')->count();
     return response()->json([
-        'total_feeds' => $total_feeds,
+        'users' => $to,
         'publishd_articles' => $published_articles,
-        'scheduled_articles' => $scheduled_articles,
     ]);
 }
 }

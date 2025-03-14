@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 use App\Models\ReadyFeed;
-use App\Models\RssFeedModel;
 
 
 
@@ -208,14 +207,12 @@ public function setApiKey(Request $request)
 public function getStatistics(Request $request){
 
     $user = Auth::user();
-    $total_feeds = RssFeedModel::all()->count();
+    $users = User::all();
 
-    $published_articles = ReadyFeed::all()->count();
-    $scheduled_articles = ReadyFeed::where('publishType', 'schedule')->count();
+    $articles_published_by_current_user = ReadyFeed::where('user_id', $user->id)->count();
     return response()->json([
-        'total_feeds' => $total_feeds,
-        'publishd_articles' => $published_articles,
-        'scheduled_articles' => $scheduled_articles,
+        'users' => $users,
+        'articles_published' => ,
     ]);
 }
 }

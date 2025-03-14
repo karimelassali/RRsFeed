@@ -51,7 +51,7 @@ class FavoritesourceController extends Controller
             $userId = Auth::user()->id;
             $favorite = FavoriteSource::where('user_id', $userId)->orderBy('id', 'desc')->get();
             return response()->json([
-                'message' =>  "{$favorite->count()} favorite sources found",
+                'message' =>  "{$favorite->count()} favorite ''sources found",
                 'sources' => $favorite ,
                 'id'=> $userId || 'no id1'  ]);
 

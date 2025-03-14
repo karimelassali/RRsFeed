@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\FavoriteSource;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Log;
-
 
 class FavoritesourceController extends Controller
 {
@@ -51,7 +50,7 @@ class FavoritesourceController extends Controller
             $userId = Auth::user()->id;
             $favorite = FavoriteSource::where('user_id', $userId)->orderBy('id', 'desc')->get();
             return response()->json([
-                'message' =>  "{$favorite->count()} favorite sources found",
+                'message' =>  "{$favorite->count()} favorite ''sources found",
                 'sources' => $favorite ,
                 'id'=> $userId || 'no id1'  ]);
 

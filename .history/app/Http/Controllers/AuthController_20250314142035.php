@@ -11,8 +11,6 @@ use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-use App\Models\ReadyFeed;
-use App\Models\RssFeedModel;
 
 
 
@@ -205,17 +203,5 @@ public function setApiKey(Request $request)
 }
 
 
-public function getStatistics(Request $request){
-
-    $user = Auth::user();
-    $total_feeds = RssFeedModel::all()->count();
-
-    $published_articles = ReadyFeed::all()->count();
-    $scheduled_articles = ReadyFeed::where('publishType', 'schedule')->count();
-    return response()->json([
-        'total_feeds' => $total_feeds,
-        'publishd_articles' => $published_articles,
-        'scheduled_articles' => $scheduled_articles,
-    ]);
-}
+getStatistics
 }

@@ -215,7 +215,7 @@ public function getStatistics(Request $request){
     return response()->json([
         'total_feeds' => $total_feeds,
         'publishd_articles' => $published_articles,
-        'scheduled_articles' => $scheduled_articles,
+        'scheduled_articles' => 
     ]);
 }
 }

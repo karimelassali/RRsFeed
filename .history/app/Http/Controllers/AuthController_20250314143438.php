@@ -206,16 +206,19 @@ public function setApiKey(Request $request)
 
 
 public function getStatistics(Request $request){
-
     $user = Auth::user();
     $total_feeds = RssFeedModel::all()->count();
-
     $published_articles = ReadyFeed::all()->count();
-    $scheduled_articles = ReadyFeed::where('publishType', 'schedule')->count();
+
+    // Get user-specific counts
+    $user_feeds = RssFeedModel::where('user_id', $user->id)->count();
+    $user_published = ReadyFeed::where('user_id', $user->id)->count();
+
     return response()->json([
         'total_feeds' => $total_feeds,
         'publishd_articles' => $published_articles,
-        'scheduled_articles' => $scheduled_articles,
+        'user_feeds' => $user_feeds,
+        'user_published_articles' => $user_published
     ]);
 }
 }

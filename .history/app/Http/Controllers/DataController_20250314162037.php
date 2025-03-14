@@ -182,7 +182,7 @@ class DataController extends Controller
         $article = ReadyFeed::findOrFail($id);
         $article->delete();
         return response()->json(['message' => 'Article deleted successfully']);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+    } catch (ModelNotFoundException $e) {
         return response()->json(['message' => 'Article not found'], 404);
     } catch (\Exception $e) {
         return response()->json(['message' => 'Failed to delete article'], 500);

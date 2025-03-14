@@ -160,4 +160,5 @@ Route::get('/settings/statistics', [AuthController::class, 'getStatistics'])->mi
 
 
 
-Route::delete('delete/data/{id}', [DataController::class, 'destroy'])->middleware('auth:sanctum');
+
+   

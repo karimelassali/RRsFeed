@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\FavoriteSource;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-
 
 class FavoritesourceController extends Controller
 {
@@ -48,20 +46,21 @@ class FavoritesourceController extends Controller
     public function fecth(Request $request)
     {
         try{
-            $userId = Auth::user()->id;
+            $userId = $request->user_id;
             $favorite = FavoriteSource::where('user_id', $userId)->orderBy('id', 'desc')->get();
             return response()->json([
                 'message' =>  "{$favorite->count()} favorite sources found",
-                'sources' => $favorite ,
-                'id'=> $userId || 'no id1'  ]);
-
+                'sources' => $favorite  ]);
         }catch(\Exception $e){
             Log::error('Error fetching favorite sources: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to fetch favorite sources'], 500);
         }
     }
 
-    public function destroy($id)
+}
+
+
+public function destroy($id)
 {
     try {
         $source = FavoriteSource::findOrFail($id);
@@ -71,9 +70,5 @@ class FavoritesourceController extends Controller
         return response()->json(['message' => 'Failed to delete source'], 500);
     }
 }
-}
-
-
-
 
 ?>
